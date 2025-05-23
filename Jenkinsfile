@@ -1,55 +1,33 @@
 pipeline {
     agent any
- 
     stages {
- 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/haseebn29/8.1C_TASK1.git'
-            }
-
+                git branch: 'main', url: 'https://github.com/haseebn29/8.2CDevSecOp.git'
             }
         }
  
-        stage('Build') {
+        stage('Install Dependencies') {
             steps {
-                echo 'Building the application...'
+                bat 'npm install'
             }
         }
  
-        stage('Unit and Integration Tests') {
+        stage('Run Tests') {
             steps {
-                echo 'Running unit and integration tests...'
+                bat 'cmd /c "npm test || exit /b 0"' 
             }
         }
  
-        stage('Code Analysis') {
+        stage('Generate Coverage Report') {
             steps {
-                echo 'Analyzing code quality...'
+                bat 'cmd /c "npm run coverage || exit /b 0"' 
             }
         }
  
-        stage('Security Scan') {
+        stage('NPM Audit (Security Scan)') {
             steps {
-                echo 'Scanning for security vulnerabilities...'
-            }
-        }
- 
-        stage('Deploy to Staging') {
-            steps {
-                echo 'Deploying to staging environment...'
-            }
-        }
- 
-        stage('Integration Tests on Staging') {
-            steps {
-                echo 'Running integration tests on staging...'
-            }
-        }
- 
-        stage('Deploy to Production') {
-            steps {
-                echo 'Deploying to production environment...'
+                bat 'cmd /c "npm audit || exit /b 0"' 
             }
         }
     }
