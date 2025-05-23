@@ -1,5 +1,9 @@
+def testStatus = 'UNKNOWN'
+def scanStatus = 'UNKNOWN'
+ 
 pipeline {
     agent any
+ 
     stages {
         stage('Checkout') {
             steps {
@@ -15,19 +19,48 @@ pipeline {
  
         stage('Run Tests') {
             steps {
-                bat 'cmd /c "npm test || exit /b 0"' 
+                script {
+                    def result = bat(script: 'npm test', returnStatus: true)
+                    testStatus = (result == 0) ? 'SUCCESS' : 'FAILURE'
+                }
             }
         }
  
         stage('Generate Coverage Report') {
             steps {
-                bat 'cmd /c "npm run coverage || exit /b 0"' 
+                bat 'npm run coverage || exit /b 0'
             }
         }
  
         stage('NPM Audit (Security Scan)') {
             steps {
-                bat 'cmd /c "npm audit || exit /b 0"' 
+                script {
+                    def result = bat(script: 'npm audit', returnStatus: true)
+                    scanStatus = (result == 0) ? 'SUCCESS' : 'FAILURE'
+                }
+            }
+        }
+ 
+        stage('Email Notification') {
+            steps {
+                script {
+                    def message = """\
+Build Completed
+ 
+Stage Results:
+- Run Tests: ${testStatus}
+- Security Scan: ${scanStatus}
+ 
+The full console log is attached.
+"""
+ 
+                    emailext(
+                        to: 'haseebn29@gmail.com',
+                        subject: "Build Summary – Tests: ${testStatus}, Scan: ${scanStatus}",
+                        body: message,
+                        attachLog: true
+                    )
+                }
             }
         }
     }
